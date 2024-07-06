@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sonolus/core": "^7.7.1",
     "@sonolus/express": "^7.0.0",
     "express": "^4.19.2"
   }
