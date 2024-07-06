@@ -6,7 +6,7 @@ sonolus.load('./pack')
 
 const sonolusShare = new SonolusSpaShare('./public')
 
-const port = 3000
+const port = 8080
 const app = express()
 
 app.use(sonolus.router)
