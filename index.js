@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("@sonolus/express");
 const core_1 = require("@sonolus/core");
 const express_2 = __importDefault(require("express"));
-const sonolus = new express_1.Sonolus();
+const sonolus = new express_1.Sonolus({ fallbackLocale: "en", address: "https://d4dj.sonolus.gorenganhunter.my.id" });
 sonolus.load('./pack');
 sonolus.serverInfoHandler = ({ session }) => ({
     title: sonolus.title,
