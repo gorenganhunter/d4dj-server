@@ -6,7 +6,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("@sonolus/express");
 const core_1 = require("@sonolus/core");
 const express_2 = __importDefault(require("express"));
-// import db from "./pack/db.json";
 // const artists: any[] = [];
 // const category: any[] = [];
 // const diff = [Text.Easy, Text.Normal, Text.Hard, Text.Expert];
@@ -22,6 +21,7 @@ const sonolus = new express_1.Sonolus({
     //     searches: {
     //         advanced: {
     //             title: { en: Text.Advanced },
+    //             icon: Icon.Advanced,
     //             options: {
     //                 artists: {
     //                     type: "multi",
@@ -38,10 +38,10 @@ const sonolus = new express_1.Sonolus({
     //                     name: { en: Text.Difficulty },
     //                     values: [...diff.map((jp) => ({ title: { jp }, def: true }))],
     //                 },
-    //                 minLevel: {
-    //                     type: "slider",
-    //                     name: { en: Text }
-    //                 }
+    //                 // minLevel: {
+    //                 //     type: "slider",
+    //                 //     name: { en: Text }
+    //                 // }
     //             },
     //         },
     //     }
@@ -77,12 +77,20 @@ function shuffle(array) {
         ];
     }
 }
+// sonolus.level.listHandler = ({ query, page }) => {
+//     const parsedQuery = parseSearchQuery(query, sonolus.level.searches)
+//     sonolus.level.searches.advanced
+//     return {
+//         items: [],
+//         pageCount: page
+//     }
+// }
 sonolus.level.detailsHandler = ({ itemName }) => {
     const item = sonolus.level.items.find(({ name }) => name === itemName);
     if (!item)
         return undefined;
     const otherDiff = sonolus.level.items.filter(({ name }) => name.split("-")[1] == itemName.split("-")[1] && name !== itemName);
-    const sameArtists = sonolus.level.items.filter(({ artists, name }) => artists.jp == item.artists.jp && name !== itemName);
+    const sameArtists = sonolus.level.items.filter(({ artists, name }) => (artists.jp == item.artists.jp) && (name !== itemName));
     const sameAuthor = sonolus.level.items.filter(({ author, name }) => author.jp == item.author.jp && name !== itemName);
     const sameRating = sonolus.level.items.filter(({ rating, name }) => rating == item.rating && name !== itemName);
     const sameCategory = sonolus.level.items.filter(({ tags, name }) => tags[1].title.jp == item.tags[1].title.jp && name !== itemName);
