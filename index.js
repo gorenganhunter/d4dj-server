@@ -144,7 +144,7 @@ sonolus.level.infoHandler = (ctx) => {
 };
 const sonolusShare = new express_1.SonolusSpaShare("./public");
 const sonolusRedirect = new express_1.SonolusRedirectShare("d4dj.sonolus.gorenganhunter.my.id");
-const port = 8080;
+const port = process.env.PORT || 8080;
 const app = (0, express_2.default)();
 app.use(sonolus.router);
 app.use(sonolusShare.router);
