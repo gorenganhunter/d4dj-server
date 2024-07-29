@@ -47,7 +47,7 @@ const sonolus = new express_1.Sonolus({
     //     }
     // }
 });
-sonolus.load("../pack");
+sonolus.load("./pack");
 sonolus.serverInfoHandler = ({ session }) => ({
     title: sonolus.title,
     description: sonolus.description,
@@ -142,7 +142,7 @@ sonolus.level.infoHandler = (ctx) => {
         banner: sonolus.banner,
     };
 };
-const sonolusShare = new express_1.SonolusSpaShare("../public");
+const sonolusShare = new express_1.SonolusSpaShare("./public");
 const sonolusRedirect = new express_1.SonolusRedirectShare("d4dj.sonolus.gorenganhunter.my.id");
 const port = process.env.PORT || 3000;
 const app = (0, express_2.default)();
