@@ -62,6 +62,7 @@ sonolus.serverInfoHandler = ({ session }) => ({
         { type: "effect" },
         { type: "particle" },
         { type: "engine" },
+        { type: "configuration" },
     ],
     configuration: {
         options: []
