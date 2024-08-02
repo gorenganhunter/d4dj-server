@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("@sonolus/express");
 const core_1 = require("@sonolus/core");
 const express_2 = __importDefault(require("express"));
+// import db from "./pack/db.json";
 // const artists: any[] = [];
 // const category: any[] = [];
 // const diff = [Text.Easy, Text.Normal, Text.Hard, Text.Expert];
@@ -47,7 +48,7 @@ const sonolus = new express_1.Sonolus({
     //     }
     // }
 });
-sonolus.load("pack");
+sonolus.load("./pack");
 sonolus.serverInfoHandler = ({ session }) => ({
     title: sonolus.title,
     description: sonolus.description,
@@ -62,6 +63,9 @@ sonolus.serverInfoHandler = ({ session }) => ({
         { type: "particle" },
         { type: "engine" },
     ],
+    configuration: {
+        options: []
+    }
 });
 function shuffle(array) {
     let currentIndex = array.length;
@@ -88,7 +92,7 @@ function shuffle(array) {
 sonolus.level.detailsHandler = ({ itemName }) => {
     const item = sonolus.level.items.find(({ name }) => name === itemName);
     if (!item)
-        return undefined;
+        return 404;
     const otherDiff = sonolus.level.items.filter(({ name }) => name.split("-")[1] == itemName.split("-")[1] && name !== itemName);
     const sameArtists = sonolus.level.items.filter(({ artists, name }) => (artists.jp == item.artists.jp) && (name !== itemName));
     const sameAuthor = sonolus.level.items.filter(({ author, name }) => author.jp == item.author.jp && name !== itemName);
@@ -106,25 +110,31 @@ sonolus.level.detailsHandler = ({ itemName }) => {
             {
                 title: { en: core_1.Text.OtherDifficulties },
                 items: otherDiff,
+                itemType: "level"
             },
             {
                 title: { en: core_1.Text.SameArtists },
                 items: sameArtists.slice(0, 5),
+                itemType: "level"
             },
             {
                 title: { en: core_1.Text.SameCategory },
                 items: sameCategory.slice(0, 5),
+                itemType: "level"
             },
             {
                 title: { en: core_1.Text.SameRating },
                 items: sameRating.slice(0, 5),
+                itemType: "level"
             },
             {
                 title: { en: core_1.Text.SameAuthor },
                 items: sameAuthor.slice(0, 5),
+                itemType: "level"
             },
         ],
         leaderboards: [],
+        actions: []
     };
 };
 sonolus.level.infoHandler = (ctx) => {
@@ -136,15 +146,16 @@ sonolus.level.infoHandler = (ctx) => {
                 title: { en: core_1.Text.Random },
                 icon: core_1.Icon.Shuffle,
                 items: expert.slice(0, 10),
+                itemType: "level"
             },
         ],
         searches: [],
         banner: sonolus.banner,
     };
 };
-const sonolusShare = new express_1.SonolusSpaShare("public");
+const sonolusShare = new express_1.SonolusSpaShare("./public");
 const sonolusRedirect = new express_1.SonolusRedirectShare("d4dj.sonolus.gorenganhunter.my.id");
-const port = process.env.PORT || 8080;
+const port = 8080;
 const app = (0, express_2.default)();
 app.use(sonolus.router);
 app.use(sonolusShare.router);
