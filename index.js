@@ -82,9 +82,7 @@ function shuffle(array) {
         ];
     }
 }
-// sonolus.level.listHandler = ({ query, page }) => {
-//     const parsedQuery = parseSearchQuery(query, sonolus.level.searches)
-//     sonolus.level.searches.advanced
+// sonolus.level.listHandler = ({ page, search }) => {
 //     return {
 //         items: [],
 //         pageCount: page
@@ -95,10 +93,10 @@ sonolus.level.detailsHandler = ({ itemName }) => {
     if (!item)
         return 404;
     const otherDiff = sonolus.level.items.filter(({ name }) => name.split("-")[1] == itemName.split("-")[1] && name !== itemName);
-    const sameArtists = sonolus.level.items.filter(({ artists, name }) => (artists.jp == item.artists.jp) && (name !== itemName));
-    const sameAuthor = sonolus.level.items.filter(({ author, name }) => author.jp == item.author.jp && name !== itemName);
-    const sameRating = sonolus.level.items.filter(({ rating, name }) => rating == item.rating && name !== itemName);
-    const sameCategory = sonolus.level.items.filter(({ tags, name }) => tags[1].title.jp == item.tags[1].title.jp && name !== itemName);
+    const sameArtists = sonolus.level.items.filter(({ artists, name }) => (artists.jp === item.artists.jp) && (name !== itemName));
+    const sameAuthor = sonolus.level.items.filter(({ author, name }) => author.jp === item.author.jp && name !== itemName);
+    const sameRating = sonolus.level.items.filter(({ rating, name }) => rating === item.rating && name !== itemName);
+    const sameCategory = sonolus.level.items.filter(({ tags, name }) => tags[1].title.jp === item.tags[1].title.jp && name !== itemName);
     shuffle(sameAuthor);
     shuffle(sameRating);
     shuffle(sameArtists);
@@ -158,6 +156,10 @@ const sonolusShare = new express_1.SonolusSpaShare("./public");
 const sonolusRedirect = new express_1.SonolusRedirectShare("d4dj.sonolus.gorenganhunter.my.id");
 const port = 8080;
 const app = (0, express_2.default)();
+// app.use((req, res, next) => {
+//     console.log(req.url)
+//     next()
+// })
 app.use(sonolus.router);
 app.use(sonolusShare.router);
 app.use(sonolusRedirect.router);
