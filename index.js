@@ -18,6 +18,7 @@ const express_2 = __importDefault(require("express"));
 // });
 const sonolus = new express_1.Sonolus({
     address: "https://d4dj.sonolus.gorenganhunter.my.id",
+    fallbackLocale: "en"
     // level: {
     //     searches: {
     //         advanced: {
@@ -93,10 +94,10 @@ sonolus.level.detailsHandler = ({ itemName }) => {
     if (!item)
         return 404;
     const otherDiff = sonolus.level.items.filter(({ name }) => name.split("-")[1] == itemName.split("-")[1] && name !== itemName);
-    const sameArtists = sonolus.level.items.filter(({ artists, name }) => (artists.jp === item.artists.jp) && (name !== itemName));
-    const sameAuthor = sonolus.level.items.filter(({ author, name }) => author.jp === item.author.jp && name !== itemName);
+    const sameArtists = sonolus.level.items.filter(({ artists, name }) => (artists.ja === item.artists.ja) && (name !== itemName) && (name.split("-")[2] === itemName.split("-")[2]));
+    const sameAuthor = sonolus.level.items.filter(({ author, name }) => author.ja === item.author.ja && name !== itemName && (name.split("-")[2] === itemName.split("-")[2]));
     const sameRating = sonolus.level.items.filter(({ rating, name }) => rating === item.rating && name !== itemName);
-    const sameCategory = sonolus.level.items.filter(({ tags, name }) => tags[1].title.jp === item.tags[1].title.jp && name !== itemName);
+    const sameCategory = sonolus.level.items.filter(({ tags, name }) => tags[1].title.ja === item.tags[1].title.ja && name !== itemName && (name.split("-")[2] === itemName.split("-")[2]));
     shuffle(sameAuthor);
     shuffle(sameRating);
     shuffle(sameArtists);
