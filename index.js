@@ -16,9 +16,33 @@ const express_2 = __importDefault(require("express"));
 //     if (!category.find(({ jp }) => jp === level.tags[1].title.jp))
 //         category.push(level.tags[1].title);
 // });
+// (function () {
+//   if (typeof Object.defineProperty === "function") {
+//     try {
+//       Object.defineProperty(Array.prototype, "sortBy", { value: sb });
+//     } catch (e) {}
+//   }
+//   if (!Array.prototype.sortBy) Array.prototype.sortBy = sb;
+//   function sb(f) {
+//     for (var i = this.length; i; ) {
+//       var o = this[--i];
+//       this[i] = [].concat(f.call(o, o, i), o);
+//     }
+//     this.sort(function (a, b) {
+//       for (var i = 0, len = a.length; i < len; ++i) {
+//         if (a[i] != b[i]) return a[i] < b[i] ? -1 : 1;
+//       }
+//       return 0;
+//     });
+//     for (var i = this.length; i; ) {
+//       this[--i] = this[i][this[i].length - 1];
+//     }
+//     return this;
+//   }
+// })();
 const sonolus = new express_1.Sonolus({
     address: "https://d4dj.sonolus.gorenganhunter.my.id",
-    fallbackLocale: "en"
+    fallbackLocale: "en",
     // level: {
     //     searches: {
     //         advanced: {
@@ -66,8 +90,8 @@ sonolus.serverInfoHandler = ({ session }) => ({
         { type: "configuration" },
     ],
     configuration: {
-        options: []
-    }
+        options: [],
+    },
 });
 function shuffle(array) {
     let currentIndex = array.length;
@@ -83,21 +107,45 @@ function shuffle(array) {
         ];
     }
 }
-// sonolus.level.listHandler = ({ page, search }) => {
-//     return {
-//         items: [],
-//         pageCount: page
-//     }
-// }
+function sort(arr) {
+    const diffName = ["easy", "normal", "hard", "expert"];
+    return arr.sort((a, b) => parseInt(b.name.split("-")[1]) - parseInt(a.name.split("-")[1]) || diffName.findIndex(diff => diff === b.name.split("-")[2]) - diffName.findIndex(diff => diff === a.name.split("-")[2]));
+}
+function highest(arr) {
+    const diffName = ["easy", "normal", "hard", "expert"];
+    return arr.filter((lvl) => {
+        const diff = diffName.findIndex((name) => lvl.name.split("-")[2] === name);
+        if (diff === 3)
+            return true;
+        for (let i = diff + 1; i < 4; i++) {
+            if (arr.find((obj) => obj.name ===
+                lvl.name.replace(lvl.name.split("-")[2], diffName[i])))
+                return false;
+        }
+        return true;
+    });
+}
+let sorted = sort(sonolus.level.items);
+let high = highest(sorted);
+sonolus.level.listHandler = ({ page, search }) => {
+    const items = (0, express_1.filterLevels)(sorted, search.type === 'quick' ? `${search.options.keywords}` : '');
+    return Object.assign({ searches: sonolus.level.searches }, (0, express_1.paginateItems)(items, page));
+};
 sonolus.level.detailsHandler = ({ itemName }) => {
     const item = sonolus.level.items.find(({ name }) => name === itemName);
     if (!item)
         return 404;
     const otherDiff = sonolus.level.items.filter(({ name }) => name.split("-")[1] == itemName.split("-")[1] && name !== itemName);
-    const sameArtists = sonolus.level.items.filter(({ artists, name }) => (artists.ja === item.artists.ja) && (name !== itemName) && (name.split("-")[2] === itemName.split("-")[2]));
-    const sameAuthor = sonolus.level.items.filter(({ author, name }) => author.ja === item.author.ja && name !== itemName && (name.split("-")[2] === itemName.split("-")[2]));
+    const sameArtists = sonolus.level.items.filter(({ artists, name }) => artists.ja === item.artists.ja &&
+        name !== itemName &&
+        name.split("-")[2] === itemName.split("-")[2]);
+    const sameAuthor = sonolus.level.items.filter(({ author, name }) => author.ja === item.author.ja &&
+        name !== itemName &&
+        name.split("-")[2] === itemName.split("-")[2]);
     const sameRating = sonolus.level.items.filter(({ rating, name }) => rating === item.rating && name !== itemName);
-    const sameCategory = sonolus.level.items.filter(({ tags, name }) => tags[1].title.ja === item.tags[1].title.ja && name !== itemName && (name.split("-")[2] === itemName.split("-")[2]));
+    const sameCategory = sonolus.level.items.filter(({ tags, name }) => tags[1].title.ja === item.tags[1].title.ja &&
+        name !== itemName &&
+        name.split("-")[2] === itemName.split("-")[2]);
     shuffle(sameAuthor);
     shuffle(sameRating);
     shuffle(sameArtists);
@@ -110,43 +158,49 @@ sonolus.level.detailsHandler = ({ itemName }) => {
             {
                 title: { en: core_1.Text.OtherDifficulties },
                 items: otherDiff,
-                itemType: "level"
+                itemType: "level",
             },
             {
                 title: { en: core_1.Text.SameArtists },
                 items: sameArtists.slice(0, 5),
-                itemType: "level"
+                itemType: "level",
             },
             {
                 title: { en: core_1.Text.SameCategory },
                 items: sameCategory.slice(0, 5),
-                itemType: "level"
+                itemType: "level",
             },
             {
                 title: { en: core_1.Text.SameRating },
                 items: sameRating.slice(0, 5),
-                itemType: "level"
+                itemType: "level",
             },
             {
                 title: { en: core_1.Text.SameAuthor },
                 items: sameAuthor.slice(0, 5),
-                itemType: "level"
+                itemType: "level",
             },
         ],
         leaderboards: [],
-        actions: []
+        actions: [],
     };
 };
 sonolus.level.infoHandler = (ctx) => {
-    const expert = sonolus.level.items.filter(({ name }) => parseInt(name.split("-")[2]) === 4);
-    shuffle(expert);
+    const random = [...high];
+    shuffle(random);
     return {
         sections: [
             {
                 title: { en: core_1.Text.Random },
                 icon: core_1.Icon.Shuffle,
-                items: expert.slice(0, 10),
-                itemType: "level"
+                items: random.slice(0, 5),
+                itemType: "level",
+            },
+            {
+                title: { en: core_1.Text.Newest },
+                icon: core_1.Icon.Level,
+                items: high.slice(0, 5),
+                itemType: "level",
             },
         ],
         searches: [],
