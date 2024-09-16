@@ -3,10 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.toIndexes = exports.randomizeItems = exports.toOptionValues = void 0;
 const express_1 = require("@sonolus/express");
 const core_1 = require("@sonolus/core");
 const express_2 = __importDefault(require("express"));
-// import db from "./pack/db.json";
+const object_1 = require("./object");
 // const artists: any[] = [];
 // const category: any[] = [];
 // const diff = [Text.Easy, Text.Normal, Text.Hard, Text.Expert];
@@ -40,40 +41,151 @@ const express_2 = __importDefault(require("express"));
 //     return this;
 //   }
 // })();
+const toOptionValues = (objects) => Object.values(objects).map((object) => ({
+    title: object.title,
+    def: true,
+}));
+exports.toOptionValues = toOptionValues;
+const difficulties = ["easy", "normal", "hard", "expert"];
+const cat = {
+    ja: ["None", "オリジナル", "カバー", "ゲーム", "インスト", "原曲"],
+    en: ["None", "Original", "Cover", "Game", "Instrumental", "Collabo"]
+};
+const diffs = (0, object_1.mapValues)({
+    easy: { en: core_1.Text.Easy },
+    normal: { en: core_1.Text.Normal },
+    hard: { en: core_1.Text.Hard },
+    expert: { en: core_1.Text.Expert },
+}, (_, title, index) => ({ title, index }));
 const sonolus = new express_1.Sonolus({
     address: "https://d4dj.sonolus.gorenganhunter.my.id",
     fallbackLocale: "en",
-    // level: {
-    //     searches: {
-    //         advanced: {
-    //             title: { en: Text.Advanced },
-    //             icon: Icon.Advanced,
-    //             options: {
-    //                 artists: {
-    //                     type: "multi",
-    //                     name: { en: Text.Artists },
-    //                     values: [...artists.map((title) => ({ title, def: true }))],
-    //                 },
-    //                 category: {
-    //                     type: "multi",
-    //                     name: { en: Text.Category },
-    //                     values: [...category.map((title) => ({ title, def: true }))],
-    //                 },
-    //                 diff: {
-    //                     type: "multi",
-    //                     name: { en: Text.Difficulty },
-    //                     values: [...diff.map((jp) => ({ title: { jp }, def: true }))],
-    //                 },
-    //                 // minLevel: {
-    //                 //     type: "slider",
-    //                 //     name: { en: Text }
-    //                 // }
-    //             },
-    //         },
-    //     }
-    // }
+    level: {
+        searches: {
+            advanced: {
+                title: { en: core_1.Text.Advanced },
+                icon: core_1.Icon.Advanced,
+                requireConfirmation: false,
+                options: {
+                    keywords: {
+                        name: { en: core_1.Text.Keywords },
+                        required: false,
+                        type: "text",
+                        placeholder: { en: core_1.Text.KeywordsPlaceholder },
+                        def: "",
+                        limit: 0,
+                        shortcuts: [],
+                    },
+                    artists: {
+                        name: { en: core_1.Text.Artists },
+                        required: false,
+                        type: "multi",
+                        values: [],
+                    },
+                    categories: {
+                        name: { en: core_1.Text.Category },
+                        required: false,
+                        type: "multi",
+                        values: [],
+                    },
+                    difficulties: {
+                        name: { en: core_1.Text.Difficulty },
+                        required: false,
+                        type: "multi",
+                        values: (0, exports.toOptionValues)(diffs),
+                    },
+                    minRating: {
+                        name: { en: core_1.Text.RatingMinimum },
+                        required: false,
+                        type: "slider",
+                        def: 0,
+                        min: 0,
+                        max: 0,
+                        step: 1,
+                    },
+                    maxRating: {
+                        name: { en: core_1.Text.RatingMaximum },
+                        required: false,
+                        type: "slider",
+                        def: 0,
+                        min: 0,
+                        max: 0,
+                        step: 1,
+                    },
+                    random: {
+                        name: { en: core_1.Text.Random },
+                        required: false,
+                        type: "toggle",
+                        def: false,
+                    },
+                },
+            },
+        },
+    },
 });
 sonolus.load("./pack");
+const playlists = new Map();
+for (const level of sonolus.level.items) {
+    const playlist = playlists.get(level.meta.music.id);
+    if (playlist) {
+        playlist.levels.push(level.name);
+    }
+    else {
+        playlists.set(level.meta.music.id, {
+            name: `d4dj-${level.name.split("-")[1]}`,
+            version: 1,
+            title: level.title,
+            subtitle: level.artists,
+            author: level.author,
+            tags: level.tags.slice(1),
+            description: level.description,
+            levels: [level.name],
+            meta: {
+                music: {
+                    id: level.meta.music.id,
+                    publishedAt: level.meta.music.publishedAt,
+                    artist: level.meta.music.artist,
+                    category: level.meta.music.category
+                },
+            },
+        });
+    }
+}
+sonolus.playlist.items = [...playlists.values()];
+let minRating = Number.POSITIVE_INFINITY;
+let maxRating = Number.NEGATIVE_INFINITY;
+for (const level of sonolus.level.items) {
+    minRating = Math.min(minRating, level.rating);
+    maxRating = Math.max(maxRating, level.rating);
+}
+sonolus.level.searches.advanced.options.minRating.min = minRating;
+sonolus.level.searches.advanced.options.minRating.def = minRating;
+sonolus.level.searches.advanced.options.minRating.max = maxRating;
+sonolus.level.searches.advanced.options.maxRating.min = minRating;
+sonolus.level.searches.advanced.options.maxRating.def = maxRating;
+sonolus.level.searches.advanced.options.maxRating.max = maxRating;
+let artists = [];
+let category = [];
+sonolus.level.items.forEach((level) => {
+    if (!artists.find(({ ja, en }) => ja === level.artists.ja && en === level.artists.en))
+        artists.push(level.artists);
+    if (!category.find(({ ja, en }) => ja === level.tags[1].title.ja && en === level.tags[1].title.en))
+        category.push(level.tags[1].title);
+});
+// console.log(artists)
+// console.log(category)
+artists = (0, object_1.mapValues)(Object.assign({}, artists), (_, title, index) => ({ title, index }));
+category = (0, object_1.mapValues)(Object.assign({}, category), (_, title, index) => ({ title, index }));
+console.log(artists);
+console.log(category);
+sonolus.level.searches.advanced.options.artists.values = (0, exports.toOptionValues)(artists);
+sonolus.level.searches.advanced.options.categories.values = (0, exports.toOptionValues)(category);
+// sonolus.authenticateHandler = (ctx) => {
+//     return {
+//         session: ctx.session,
+//         expiration: 1
+//     }
+// }
 sonolus.serverInfoHandler = ({ session }) => ({
     title: sonolus.title,
     description: sonolus.description,
@@ -93,6 +205,27 @@ sonolus.serverInfoHandler = ({ session }) => ({
         options: [],
     },
 });
+const randomize = (items, count) => {
+    const pool = [...items];
+    const result = [];
+    while (pool.length && result.length < count) {
+        const index = Math.floor(Math.random() * pool.length);
+        result.push(...pool.splice(index, 1));
+    }
+    return result;
+};
+const randomizeItems = (items) => {
+    if (!items.length)
+        return {
+            pageCount: 0,
+            items: [],
+        };
+    return {
+        pageCount: 1,
+        items: randomize(items, 20),
+    };
+};
+exports.randomizeItems = randomizeItems;
 function shuffle(array) {
     let currentIndex = array.length;
     // While there remain elements to shuffle...
@@ -108,18 +241,18 @@ function shuffle(array) {
     }
 }
 function sort(arr) {
-    const diffName = ["easy", "normal", "hard", "expert"];
-    return arr.sort((a, b) => parseInt(b.name.split("-")[1]) - parseInt(a.name.split("-")[1]) || diffName.findIndex(diff => diff === b.name.split("-")[2]) - diffName.findIndex(diff => diff === a.name.split("-")[2]));
+    return arr.sort((a, b) => parseInt(b.name.split("-")[1]) - parseInt(a.name.split("-")[1]) ||
+        difficulties.findIndex((diff) => diff === b.name.split("-")[2]) -
+            difficulties.findIndex((diff) => diff === a.name.split("-")[2]));
 }
 function highest(arr) {
-    const diffName = ["easy", "normal", "hard", "expert"];
     return arr.filter((lvl) => {
-        const diff = diffName.findIndex((name) => lvl.name.split("-")[2] === name);
+        const diff = difficulties.findIndex((name) => lvl.name.split("-")[2] === name);
         if (diff === 3)
             return true;
         for (let i = diff + 1; i < 4; i++) {
             if (arr.find((obj) => obj.name ===
-                lvl.name.replace(lvl.name.split("-")[2], diffName[i])))
+                lvl.name.replace(lvl.name.split("-")[2], difficulties[i])))
                 return false;
         }
         return true;
@@ -127,9 +260,29 @@ function highest(arr) {
 }
 let sorted = sort(sonolus.level.items);
 let high = highest(sorted);
-sonolus.level.listHandler = ({ page, search }) => {
-    const items = (0, express_1.filterLevels)(sorted, search.type === 'quick' ? `${search.options.keywords}` : '');
-    return Object.assign({ searches: sonolus.level.searches }, (0, express_1.paginateItems)(items, page));
+const toIndexes = (values) => values
+    .map((value, index) => ({ value, index }))
+    .filter(({ value }) => value)
+    .map(({ index }) => index);
+exports.toIndexes = toIndexes;
+function getDiff(name) {
+    const d = name.split("-")[2];
+    return d === "easy" ? 1 : d === "normal" ? 2 : d === "hard" ? 3 : d === "expert" ? 4 : 0;
+}
+sonolus.level.listHandler = ({ search: { type, options }, page }) => {
+    if (type === 'quick')
+        return Object.assign(Object.assign({}, (0, express_1.paginateItems)((0, express_1.filterLevels)(sonolus.level.items, options.keywords), page)), { searches: sonolus.level.searches });
+    // console.log(options)
+    const characterIndexes = (0, exports.toIndexes)(options.artists).map(i => artists[i].title);
+    const categoryIndexes = (0, exports.toIndexes)(options.categories).map(i => i + 1);
+    const difficultyIndexes = (0, exports.toIndexes)(options.difficulties).map(i => i + 1);
+    // console.log(characterIndexes, categoryIndexes, difficultyIndexes)
+    const items = (0, express_1.filterLevels)(sonolus.level.items.filter(({ name, rating, meta, artists }) => (characterIndexes.filter(({ ja, en }) => artists.ja === ja || artists.en === en).length > 0) &&
+        categoryIndexes.includes(meta.music.category) &&
+        difficultyIndexes.includes(getDiff(name)) &&
+        rating >= options.minRating &&
+        rating <= options.maxRating), options.keywords);
+    return Object.assign(Object.assign({}, (options.random ? (0, exports.randomizeItems)(items) : (0, express_1.paginateItems)(items, page))), { searches: sonolus.level.searches });
 };
 sonolus.level.detailsHandler = ({ itemName }) => {
     const item = sonolus.level.items.find(({ name }) => name === itemName);
@@ -203,7 +356,7 @@ sonolus.level.infoHandler = (ctx) => {
                 itemType: "level",
             },
         ],
-        searches: [],
+        searches: sonolus.level.searches,
         banner: sonolus.banner,
     };
 };
