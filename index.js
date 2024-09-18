@@ -47,10 +47,6 @@ const toOptionValues = (objects) => Object.values(objects).map((object) => ({
 }));
 exports.toOptionValues = toOptionValues;
 const difficulties = ["easy", "normal", "hard", "expert"];
-const cat = {
-    ja: ["None", "オリジナル", "カバー", "ゲーム", "インスト", "原曲"],
-    en: ["None", "Original", "Cover", "Game", "Instrumental", "Collabo"]
-};
 const diffs = (0, object_1.mapValues)({
     easy: { en: core_1.Text.Easy },
     normal: { en: core_1.Text.Normal },
@@ -165,19 +161,40 @@ sonolus.level.searches.advanced.options.maxRating.min = minRating;
 sonolus.level.searches.advanced.options.maxRating.def = maxRating;
 sonolus.level.searches.advanced.options.maxRating.max = maxRating;
 let artists = [];
-let category = [];
+let category = [
+    {
+        ja: "オリジナル",
+        en: "Original"
+    },
+    {
+        ja: "カバー",
+        en: "Cover"
+    },
+    {
+        ja: "カバー",
+        en: "Game"
+    },
+    {
+        ja: "インスト",
+        en: "Instrumental"
+    },
+    {
+        ja: "原曲",
+        en: "Collabo"
+    }
+];
 sonolus.level.items.forEach((level) => {
     if (!artists.find(({ ja, en }) => ja === level.artists.ja && en === level.artists.en))
         artists.push(level.artists);
-    if (!category.find(({ ja, en }) => ja === level.tags[1].title.ja && en === level.tags[1].title.en))
-        category.push(level.tags[1].title);
+    // if (!category.find(({ ja, en }: { ja: String, en: String }) => ja === level.tags[1].title.ja && en === level.tags[1].title.en))
+    //     category.push(level.tags[1].title);
 });
 // console.log(artists)
 // console.log(category)
 artists = (0, object_1.mapValues)(Object.assign({}, artists), (_, title, index) => ({ title, index }));
 category = (0, object_1.mapValues)(Object.assign({}, category), (_, title, index) => ({ title, index }));
 console.log(artists);
-console.log(category);
+// console.log(category)
 sonolus.level.searches.advanced.options.artists.values = (0, exports.toOptionValues)(artists);
 sonolus.level.searches.advanced.options.categories.values = (0, exports.toOptionValues)(category);
 // sonolus.authenticateHandler = (ctx) => {
