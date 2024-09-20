@@ -97,7 +97,7 @@ const sonolus = new express_1.Sonolus({
                         def: 0,
                         min: 0,
                         max: 0,
-                        step: 1,
+                        step: 0.5,
                     },
                     maxRating: {
                         name: { en: core_1.Text.RatingMaximum },
@@ -106,7 +106,7 @@ const sonolus = new express_1.Sonolus({
                         def: 0,
                         min: 0,
                         max: 0,
-                        step: 1,
+                        step: 0.5,
                     },
                     random: {
                         name: { en: core_1.Text.Random },
