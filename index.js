@@ -118,6 +118,69 @@ const sonolus = new express_1.Sonolus({
             },
         },
     },
+    playlist: {
+        searches: {
+            advanced: {
+                title: { en: core_1.Text.Advanced },
+                icon: core_1.Icon.Advanced,
+                requireConfirmation: false,
+                options: {
+                    keywords: {
+                        name: { en: core_1.Text.Keywords },
+                        required: false,
+                        type: 'text',
+                        placeholder: { en: core_1.Text.KeywordsPlaceholder },
+                        def: '',
+                        limit: 0,
+                        shortcuts: [],
+                    },
+                    random: {
+                        name: { en: core_1.Text.Random },
+                        required: false,
+                        type: 'toggle',
+                        def: false,
+                    },
+                    artists: {
+                        name: { en: core_1.Text.Artists },
+                        required: false,
+                        type: 'multi',
+                        values: [],
+                    },
+                    categories: {
+                        name: { en: core_1.Text.Category },
+                        required: false,
+                        type: 'multi',
+                        values: [],
+                    },
+                },
+            },
+            random: {
+                title: { en: core_1.Text.Random },
+                icon: core_1.Icon.Shuffle,
+                requireConfirmation: false,
+                options: {
+                    minRating: {
+                        name: { en: core_1.Text.RatingMinimum },
+                        required: false,
+                        type: 'slider',
+                        def: 0,
+                        min: 0,
+                        max: 0,
+                        step: 0.5,
+                    },
+                    maxRating: {
+                        name: { en: core_1.Text.RatingMaximum },
+                        required: false,
+                        type: 'slider',
+                        def: 0,
+                        min: 0,
+                        max: 0,
+                        step: 0.5,
+                    },
+                },
+            },
+        },
+    },
 });
 sonolus.load("./pack");
 const playlists = new Map();
@@ -161,6 +224,12 @@ sonolus.level.searches.advanced.options.minRating.max = maxRating;
 sonolus.level.searches.advanced.options.maxRating.min = minRating;
 sonolus.level.searches.advanced.options.maxRating.def = maxRating;
 sonolus.level.searches.advanced.options.maxRating.max = maxRating;
+sonolus.playlist.searches.random.options.minRating.min = minRating;
+sonolus.playlist.searches.random.options.minRating.def = minRating;
+sonolus.playlist.searches.random.options.minRating.max = maxRating;
+sonolus.playlist.searches.random.options.maxRating.min = minRating;
+sonolus.playlist.searches.random.options.maxRating.def = maxRating;
+sonolus.playlist.searches.random.options.maxRating.max = maxRating;
 let artists = [];
 let category = [
     {
@@ -198,6 +267,8 @@ console.log(artists);
 // console.log(category)
 sonolus.level.searches.advanced.options.artists.values = (0, exports.toOptionValues)(artists);
 sonolus.level.searches.advanced.options.categories.values = (0, exports.toOptionValues)(category);
+sonolus.playlist.searches.advanced.options.artists.values = (0, exports.toOptionValues)(artists);
+sonolus.playlist.searches.advanced.options.categories.values = (0, exports.toOptionValues)(category);
 // sonolus.authenticateHandler = (ctx) => {
 //     return {
 //         session: ctx.session,
@@ -276,8 +347,12 @@ function highest(arr) {
         return true;
     });
 }
+function sortPlaylist(arr) {
+    return arr.sort((a, b) => b.meta.music.order - a.meta.music.order);
+}
 let sorted = sort(sonolus.level.items);
 let high = highest(sorted);
+sortPlaylist(sonolus.playlist.items);
 const toIndexes = (values) => values
     .map((value, index) => ({ value, index }))
     .filter(({ value }) => value)
@@ -375,6 +450,97 @@ sonolus.level.infoHandler = (ctx) => {
             },
         ],
         searches: sonolus.level.searches,
+        banner: sonolus.banner,
+    };
+};
+sonolus.playlist.listHandler = ({ search: { type, options }, page }) => {
+    if (type === 'quick')
+        return Object.assign(Object.assign({}, (0, express_1.paginateItems)((0, express_1.filterPlaylists)(sonolus.playlist.items, options.keywords), page)), { searches: sonolus.playlist.searches });
+    if (type === 'random')
+        return {
+            pageCount: 1,
+            items: [
+                {
+                    name: `d4dj-random-${options.minRating}-${options.maxRating}`,
+                    version: 1,
+                    title: { en: `${options.minRating} - ${options.maxRating}` },
+                    subtitle: {},
+                    author: { en: "D4DJ Groovy Mix" },
+                    tags: [{ title: { en: core_1.Text.Random } }],
+                    levels: [],
+                },
+            ],
+            searches: sonolus.playlist.searches,
+        };
+    // console.log(options)
+    const characterIndexes = (0, exports.toIndexes)(options.artists).map(i => artists[i].title);
+    const categoryIndexes = (0, exports.toIndexes)(options.categories).map(i => i + 1);
+    // console.log(characterIndexes, categoryIndexes, difficultyIndexes)
+    const items = (0, express_1.filterPlaylists)(sonolus.playlist.items.filter(({ meta, subtitle }) => (characterIndexes.filter(({ ja, en }) => subtitle.ja === ja || subtitle.en === en).length > 0) &&
+        categoryIndexes.includes(meta.music.category)), options.keywords);
+    return Object.assign(Object.assign({}, (options.random ? (0, exports.randomizeItems)(items) : (0, express_1.paginateItems)(items, page))), { searches: sonolus.playlist.searches });
+};
+sonolus.playlist.detailsHandler = ({ itemName }) => {
+    if (itemName.startsWith(`d4dj-random-`)) {
+        const [, , min, max] = itemName.split('-');
+        const minRating = +(min !== null && min !== void 0 ? min : '') || 0;
+        const maxRating = +(max !== null && max !== void 0 ? max : '') || 0;
+        return {
+            item: {
+                name: itemName,
+                version: 1,
+                title: { en: `${minRating} - ${maxRating}` },
+                subtitle: {},
+                author: { en: "D4DJ Groovy Mix" },
+                tags: [{ title: { en: core_1.Text.Random } }],
+                levels: randomize(sonolus.level.items
+                    .filter(({ rating }) => rating >= minRating && rating <= maxRating)
+                    .map(({ name }) => name), 20)
+            },
+            actions: {},
+            hasCommunity: false,
+            leaderboards: [],
+            sections: [],
+        };
+    }
+    const item = sonolus.playlist.items.find(({ name }) => name === itemName);
+    if (!item)
+        return 404;
+    return {
+        item,
+        description: item.description,
+        hasCommunity: false,
+        sections: [getRandomPlaylists(item)].filter(nonEmpty),
+        leaderboards: [],
+        actions: [],
+    };
+};
+const getRandomPlaylists = (item) => ({
+    title: { en: core_1.Text.Random },
+    icon: core_1.Icon.Shuffle,
+    itemType: 'playlist',
+    items: randomize(sonolus.playlist.items.filter((i) => i !== item), 5),
+});
+const nonEmpty = (section) => section.items.length;
+sonolus.playlist.infoHandler = (ctx) => {
+    const random = [...sonolus.playlist.items];
+    shuffle(random);
+    return {
+        sections: [
+            {
+                title: { en: core_1.Text.Random },
+                icon: core_1.Icon.Shuffle,
+                items: random.slice(0, 5),
+                itemType: "playlist",
+            },
+            {
+                title: { en: core_1.Text.Newest },
+                icon: core_1.Icon.Level,
+                items: sonolus.playlist.items.slice(0, 5),
+                itemType: "playlist",
+            },
+        ],
+        searches: sonolus.playlist.searches,
         banner: sonolus.banner,
     };
 };
