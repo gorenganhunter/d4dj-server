@@ -141,7 +141,8 @@ for (const level of sonolus.level.items) {
                     id: level.meta.music.id,
                     publishedAt: level.meta.music.publishedAt,
                     artist: level.meta.music.artist,
-                    category: level.meta.music.category
+                    category: level.meta.music.category,
+                    order: level.meta.music.order
                 },
             },
         });
@@ -258,7 +259,7 @@ function shuffle(array) {
     }
 }
 function sort(arr) {
-    return arr.sort((a, b) => parseInt(b.name.split("-")[1]) - parseInt(a.name.split("-")[1]) ||
+    return arr.sort((a, b) => b.meta.music.order - a.meta.music.order ||
         difficulties.findIndex((diff) => diff === b.name.split("-")[2]) -
             difficulties.findIndex((diff) => diff === a.name.split("-")[2]));
 }
