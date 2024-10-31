@@ -183,6 +183,27 @@ const sonolus = new express_1.Sonolus({
     },
 });
 sonolus.load("./pack");
+sonolus.post.items.push({
+    name: "d4dj-welcome",
+    title: { en: "Welcome to Sonolus D4DJ Server" },
+    time: 0,
+    author: { en: "Gorengan Hunter" },
+    tags: [{ title: { en: core_1.Text.Announcement } }],
+    version: 1,
+    thumbnail: sonolus.engine.items[0].thumbnail,
+    description: {
+        en: "This server is still not finished and opened for testing\n" +
+            "\n" +
+            "Before playing the D4DJ engine, you need to pay attention to the following:\n" +
+            "1. Due to Sonolus limitations, you cannot access settings from the pause screen.\n" +
+            "2. Due to Sonolus combo calculations, Good judgment breaks the combo.\n" +
+            "3. Because the Sonolus judgment only has 4 types, Just Perfect is counted as Perfect and Bad is counted as Miss.\n" +
+            "4. Slider movement is not saved in replay because I still have no idea how to store it.\n" +
+            "5. The data used for this server is synchronized with the official D4DJ JP and EN at 6pm JST (UTC+9) every day. The decryption key used to decrypt the audio file comes from https://yinmo.deachsword.com/db\n" +
+            "\n" +
+            "If you encounter any issues during gameplay or have some suggestions for this engine, you can open an issue at https://github.com/gorenganhunter/sonolus-d4dj-engine/issues, or chat me on this discord server https://discord.gg/haJZufcv8G and I will fix it soon."
+    }
+});
 const playlists = new Map();
 for (const level of sonolus.level.items) {
     const playlist = playlists.get(level.meta.music.id);
@@ -436,6 +457,12 @@ sonolus.level.infoHandler = (ctx) => {
     shuffle(random);
     return {
         sections: [
+            {
+                title: { en: core_1.Text.Announcement },
+                icon: core_1.Icon.Post,
+                items: sonolus.post.items.slice(0, 5),
+                itemType: "post"
+            },
             {
                 title: { en: core_1.Text.Random },
                 icon: core_1.Icon.Shuffle,
