@@ -8,6 +8,7 @@ const express_1 = require("@sonolus/express");
 const core_1 = require("@sonolus/core");
 const express_2 = __importDefault(require("express"));
 const object_1 = require("./object");
+const path = require("path");
 // const artists: any[] = [];
 // const category: any[] = [];
 // const diff = [Text.Easy, Text.Normal, Text.Hard, Text.Expert];
@@ -182,7 +183,7 @@ const sonolus = new express_1.Sonolus({
         },
     },
 });
-sonolus.load("./pack");
+sonolus.load(path.join(process.cwd(), "./pack"));
 sonolus.post.items.push({
     name: "d4dj-welcome",
     title: { en: "Welcome to Sonolus D4DJ Server" },
@@ -585,3 +586,5 @@ app.use(sonolusRedirect.router);
 app.listen(port, () => {
     console.log("Server listening at port", port);
 });
+
+module.exports = app
