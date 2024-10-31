@@ -201,7 +201,7 @@ sonolus.post.items.push({
             "4. Slider movement is not saved in replay because I still have no idea how to store it.\n" +
             "5. The data used for this server is synchronized with the official D4DJ JP and EN at 6pm JST (UTC+9) every day. The decryption key used to decrypt the audio file comes from https://yinmo.deachsword.com/db\n" +
             "\n" +
-            "If you encounter any issues during gameplay or have some suggestions for this engine, you can open an issue at https://github.com/gorenganhunter/sonolus-d4dj-engine/issues, or chat me on this discord server https://discord.gg/haJZufcv8G and I will fix it soon."
+            "If you encounter any issues during gameplay or have some suggestions for this engine, you can open an issue at https://github.com/gorenganhunter/sonolus-d4dj-engine/issues, or contact me on this discord server https://discord.gg/haJZufcv8G and I will fix it soon."
     }
 });
 const playlists = new Map();
