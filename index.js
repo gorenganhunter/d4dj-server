@@ -587,3 +587,4 @@ app.use(sonolusRedirect.router);
 app.listen(port, () => {
     console.log("Server listening at port", port);
 });
+exports.default = app;
