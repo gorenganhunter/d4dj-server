@@ -574,7 +574,6 @@ sonolus.playlist.infoHandler = (ctx) => {
 };
 const sonolusShare = new express_1.SonolusSpaShare(path_1.default.join(process.cwd(), "./public"));
 const sonolusRedirect = new express_1.SonolusRedirectShare("d4dj.sonolus.gorenganhunter.my.id");
-sonolus.load(path_1.default.join(process.cwd(), "./pack"));
 const port = 8080;
 const app = (0, express_2.default)();
 // app.use((req, res, next) => {
