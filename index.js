@@ -40,7 +40,6 @@ const path_1 = __importDefault(require("path"));
 //       this[--i] = this[i][this[i].length - 1];
 //     }
 //     return this;
-//   }
 // })();
 const toOptionValues = (objects) => Object.values(objects).map((object) => ({
     title: object.title,
