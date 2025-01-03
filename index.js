@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.toIndexes = exports.randomizeItems = exports.toOptionValues = void 0;
+exports.toIndexes = exports.randomizeItems = void 0;
 const express_1 = require("@sonolus/express");
 const core_1 = require("@sonolus/core");
 const express_2 = __importDefault(require("express"));
@@ -40,19 +40,21 @@ const path_1 = __importDefault(require("path"));
 //       this[--i] = this[i][this[i].length - 1];
 //     }
 //     return this;
+//   }
 // })();
-const toOptionValues = (objects) => Object.values(objects).map((object) => ({
-    title: object.title,
-    def: true,
-}));
-exports.toOptionValues = toOptionValues;
+// export const toOptionValues: Record<PropertyKey, ServerMultiOptionValueModel> = (objects: Record<PropertyKey, { title: LocalizationText }>) =>
+//     objects
+// Object.values(objects).map((object) => ({
+//     title: object.title,
+//     def: true,
+// }))
 const difficulties = ["easy", "normal", "hard", "expert"];
 const diffs = (0, object_1.mapValues)({
     easy: { en: core_1.Text.Easy },
     normal: { en: core_1.Text.Normal },
     hard: { en: core_1.Text.Hard },
     expert: { en: core_1.Text.Expert },
-}, (_, title, index) => ({ title, index }));
+}, (_, title) => ({ title, def: true }));
 const sonolus = new express_1.Sonolus({
     address: "https://d4dj.sonolus.gorenganhunter.my.id",
     fallbackLocale: "en",
@@ -76,19 +78,19 @@ const sonolus = new express_1.Sonolus({
                         name: { en: core_1.Text.Artists },
                         required: false,
                         type: "multi",
-                        values: [],
+                        values: {},
                     },
                     categories: {
                         name: { en: core_1.Text.Category },
                         required: false,
                         type: "multi",
-                        values: [],
+                        values: {},
                     },
                     difficulties: {
                         name: { en: core_1.Text.Difficulty },
                         required: false,
                         type: "multi",
-                        values: (0, exports.toOptionValues)(diffs),
+                        values: diffs,
                     },
                     minRating: {
                         name: { en: core_1.Text.RatingMinimum },
@@ -144,13 +146,13 @@ const sonolus = new express_1.Sonolus({
                         name: { en: core_1.Text.Artists },
                         required: false,
                         type: 'multi',
-                        values: [],
+                        values: {},
                     },
                     categories: {
                         name: { en: core_1.Text.Category },
                         required: false,
                         type: 'multi',
-                        values: [],
+                        values: {},
                     },
                 },
             },
@@ -176,6 +178,59 @@ const sonolus = new express_1.Sonolus({
                         min: 0,
                         max: 0,
                         step: 0.5,
+                    },
+                },
+            },
+        },
+    },
+    background: {
+        searches: {
+            advanced: {
+                title: { en: core_1.Text.Advanced },
+                icon: core_1.Icon.Advanced,
+                requireConfirmation: false,
+                options: {
+                    keywords: {
+                        name: { en: core_1.Text.Keywords },
+                        required: false,
+                        type: "text",
+                        placeholder: { en: core_1.Text.KeywordsPlaceholder },
+                        def: "",
+                        limit: 0,
+                        shortcuts: [],
+                    },
+                    chars: {
+                        name: { en: "Character" },
+                        required: false,
+                        type: "multi",
+                        values: {},
+                    },
+                    attr: {
+                        name: { en: "Attribute" },
+                        required: false,
+                        type: "multi",
+                        values: {},
+                    },
+                    status: {
+                        name: { en: "Status" },
+                        required: false,
+                        type: "multi",
+                        values: {
+                            normal: {
+                                title: { en: "Normal" },
+                                def: true
+                            },
+                            trained: {
+                                title: { en: "Trained" },
+                                def: true
+                            }
+                        },
+                    },
+                    random: {
+                        name: { en: core_1.Text.Random },
+                        required: false,
+                        type: "toggle",
+                        def: false,
                     },
                 },
             },
@@ -252,6 +307,7 @@ sonolus.playlist.searches.random.options.maxRating.min = minRating;
 sonolus.playlist.searches.random.options.maxRating.def = maxRating;
 sonolus.playlist.searches.random.options.maxRating.max = maxRating;
 let artists = [];
+let chars = [];
 let category = [
     {
         ja: "オリジナル",
@@ -274,22 +330,39 @@ let category = [
         en: "Collabo"
     }
 ];
+let attr = [
+    { ja: "ストリート", en: "Street" },
+    { ja: "パーティー", en: "Party" },
+    { ja: "キュート", en: "Cute" },
+    { ja: "クール", en: "Cool" },
+    { ja: "エレガント", en: "Elegant" }
+];
 sonolus.level.items.forEach((level) => {
     if (!artists.find(({ ja, en }) => ja === level.artists.ja && en === level.artists.en))
         artists.push(level.artists);
     // if (!category.find(({ ja, en }: { ja: String, en: String }) => ja === level.tags[1].title.ja && en === level.tags[1].title.en))
     //     category.push(level.tags[1].title);
 });
+sonolus.background.items.forEach((bg) => {
+    if (bg.name.startsWith("d4dj-card") && !chars.find(({ ja, en }) => ja === bg.subtitle.ja && en === bg.subtitle.en))
+        chars.push(bg.subtitle);
+    // if (!category.find(({ ja, en }: { ja: String, en: String }) => ja === level.tags[1].title.ja && en === level.tags[1].title.en))
+    //     category.push(level.tags[1].title);
+});
 // console.log(artists)
 // console.log(category)
-artists = (0, object_1.mapValues)(Object.assign({}, artists), (_, title, index) => ({ title, index }));
-category = (0, object_1.mapValues)(Object.assign({}, category), (_, title, index) => ({ title, index }));
-console.log(artists);
+artists = (0, object_1.mapValues)(Object.assign({}, artists), (_, title) => ({ title, def: true }));
+category = (0, object_1.mapValues)(Object.assign({}, category), (_, title) => ({ title, def: true }));
+attr = (0, object_1.mapValues)(Object.assign({}, attr), (_, title) => ({ title, def: true }));
+chars = (0, object_1.mapValues)(Object.assign({}, chars), (_, title) => ({ title, def: true }));
+// console.log(artists)
 // console.log(category)
-sonolus.level.searches.advanced.options.artists.values = (0, exports.toOptionValues)(artists);
-sonolus.level.searches.advanced.options.categories.values = (0, exports.toOptionValues)(category);
-sonolus.playlist.searches.advanced.options.artists.values = (0, exports.toOptionValues)(artists);
-sonolus.playlist.searches.advanced.options.categories.values = (0, exports.toOptionValues)(category);
+sonolus.level.searches.advanced.options.artists.values = artists;
+sonolus.level.searches.advanced.options.categories.values = category;
+sonolus.playlist.searches.advanced.options.artists.values = artists;
+sonolus.playlist.searches.advanced.options.categories.values = category;
+sonolus.background.searches.advanced.options.chars.values = chars;
+sonolus.background.searches.advanced.options.attr.values = attr;
 // sonolus.authenticateHandler = (ctx) => {
 //     return {
 //         session: ctx.session,
@@ -371,13 +444,20 @@ function highest(arr) {
 function sortPlaylist(arr) {
     return arr.sort((a, b) => b.meta.music.order - a.meta.music.order);
 }
+const statusCard = ["normal", "trained"];
+function sortBg(arr) {
+    return arr.sort((a, b) => b.meta.order - a.meta.order ||
+        statusCard.findIndex((diff) => diff === b.name.split("-")[3]) -
+            statusCard.findIndex((diff) => diff === a.name.split("-")[3]));
+}
 let sorted = sort(sonolus.level.items);
 let high = highest(sorted);
 sortPlaylist(sonolus.playlist.items);
-const toIndexes = (values) => values
-    .map((value, index) => ({ value, index }))
+sortBg(sonolus.background.items);
+const toIndexes = (values) => Object.entries(values)
+    .map(([key, value]) => ({ value, key }))
     .filter(({ value }) => value)
-    .map(({ index }) => index);
+    .map(({ key }) => parseInt(key));
 exports.toIndexes = toIndexes;
 function getDiff(name) {
     const d = name.split("-")[2];
@@ -570,6 +650,41 @@ sonolus.playlist.infoHandler = (ctx) => {
         searches: sonolus.playlist.searches,
         banner: sonolus.banner,
     };
+};
+sonolus.background.infoHandler = () => {
+    const random = [...sonolus.background.items];
+    shuffle(random);
+    return {
+        sections: [
+            {
+                title: { en: core_1.Text.Random },
+                icon: core_1.Icon.Shuffle,
+                items: random.slice(0, 5),
+                itemType: "background",
+            },
+            {
+                title: { en: core_1.Text.Newest },
+                icon: core_1.Icon.Level,
+                items: sonolus.background.items.slice(0, 5),
+                itemType: "background",
+            },
+        ],
+        searches: sonolus.background.searches,
+        banner: sonolus.banner,
+    };
+};
+sonolus.background.listHandler = ({ search: { type, options }, page }) => {
+    if (type === 'quick')
+        return Object.assign(Object.assign({}, (0, express_1.paginateItems)((0, express_1.filterBackgrounds)(sonolus.background.items, options.keywords), page)), { searches: sonolus.background.searches });
+    // console.log(options)
+    const characterIndexes = (0, exports.toIndexes)(options.chars).map(i => chars[i].title);
+    const attributeIndexes = (0, exports.toIndexes)(options.attr).map(i => attr[i].title);
+    const statusIndexes = (0, exports.toIndexes)(options.status);
+    // console.log(characterIndexes, categoryIndexes, difficultyIndexes)
+    const items = (0, express_1.filterBackgrounds)(sonolus.background.items.filter(({ name, subtitle, tags }) => (characterIndexes.filter(({ ja, en }) => subtitle.ja === ja || subtitle.en === en).length > 0) &&
+        (attributeIndexes.filter(({ ja, en }) => tags[1].title.ja === ja || tags[1].title.en === en).length > 0) &&
+        statusIndexes.includes(statusCard.findIndex(s => s === name.split("-")[3]))), options.keywords);
+    return Object.assign(Object.assign({}, (options.random ? (0, exports.randomizeItems)(items) : (0, express_1.paginateItems)(items, page))), { searches: sonolus.background.searches });
 };
 const sonolusShare = new express_1.SonolusSpaShare(path_1.default.join(process.cwd(), "./public"));
 const sonolusRedirect = new express_1.SonolusRedirectShare("d4dj.sonolus.gorenganhunter.my.id");
